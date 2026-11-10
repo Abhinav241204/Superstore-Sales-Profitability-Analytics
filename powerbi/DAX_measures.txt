@@ -1,0 +1,58 @@
+-- Create these as MEASURES in Power BI (table name: Superstore)
+
+Total Sales = SUM(Superstore[Sales])
+
+Total Profit = SUM(Superstore[Profit])
+
+Profit Margin = DIVIDE([Total Profit], [Total Sales], 0)
+
+Total Orders = DISTINCTCOUNT(Superstore[Order ID])
+
+Total Customers = DISTINCTCOUNT(Superstore[Customer ID])
+
+Total Products = DISTINCTCOUNT(Superstore[Product ID])
+
+Total Quantity = SUM(Superstore[Quantity])
+
+Average Order Value = DIVIDE([Total Sales], [Total Orders], 0)
+
+Average Discount = AVERAGE(Superstore[Discount])
+
+Loss-Making Lines = CALCULATE(COUNTROWS(Superstore), Superstore[Profit] < 0)
+
+Loss-Making Products =
+COUNTROWS(
+    FILTER(
+        VALUES(Superstore[Product ID]),
+        CALCULATE(SUM(Superstore[Profit])) < 0
+    )
+)
+
+Average Shipping Days = AVERAGEX(
+    Superstore,
+    DATEDIFF(Superstore[Order Date], Superstore[Ship Date], DAY)
+)
+
+Sales Previous Year = CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Date'[Date]))
+
+Sales YoY Growth % = DIVIDE([Total Sales] - [Sales Previous Year], [Sales Previous Year])
+
+Profit Previous Year = CALCULATE([Total Profit], SAMEPERIODLASTYEAR('Date'[Date]))
+
+Profit YoY Growth % = DIVIDE([Total Profit] - [Profit Previous Year], [Profit Previous Year])
+
+-- Date table (create as a calculated table)
+Date =
+ADDCOLUMNS(
+    CALENDAR(MIN(Superstore[Order Date]), MAX(Superstore[Order Date])),
+    "Year", YEAR([Date]),
+    "Month Number", MONTH([Date]),
+    "Month", FORMAT([Date], "MMM"),
+    "Year-Month", FORMAT([Date], "YYYY-MM"),
+    "Quarter", "Q" & FORMAT([Date], "Q")
+)
+
+-- After creating Date, mark it as the Date table and create a relationship:
+-- Date[Date] (one) -> Superstore[Order Date] (many).
+-- Sort Date[Month] by Date[Month Number].
+-- For a robust model, use Date table fields in time-series visuals.
